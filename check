@@ -1,0 +1,85 @@
+#!/usr/bin/env ruby -KU
+
+# = PulseCheck script utility
+#
+#A simple script used to assist checking remote urls. When run, 
+#this script will check all websites listed in config.txt and examine
+#their response codes. If errors are found, the complete log is sent
+#to administrators defined within config.txt.
+require "rubygems"
+require "net/http"
+require "uri"
+require "pulse_mailer"
+require "group_parser"
+
+# Error class for failed url parsing
+class MalformedURI < StandardError; end
+
+
+CONFIG_FILE = File.dirname(__FILE__) + "/config.txt"
+LOG_FILE = File.dirname(__FILE__) + "/pulse.log"
+@mail_recipients = []
+locations = []
+@errors_found = false
+
+# Checks a url and returns its reponse object
+def check_url(location)
+  begin
+    url = URI.parse(location)
+    request = Net::HTTP::Get.new(url.path)
+    response = Net::HTTP.start(url.host, url.port) { |http| http.request(request) }
+  rescue
+    raise MalformedURI
+  end
+end
+
+# Returns a descriptive string of the url checked with status code
+def write_url_status(url, response)
+  out = "[#{Time.now}] Checking #{url} "
+  if response.code == "200"
+    out << "OK"
+  else
+    @errors_found = true
+    out << "FAIL"
+  end
+  out << " #{response.code}"
+end
+
+# Writes a string or an array of strings to the log file
+def log_message(msg)
+  final_message = ''
+  if msg.respond_to? :join
+    final_message = msg.join("\n")
+  else
+    final_message = msg
+  end
+  
+  File.open(LOG_FILE, 'a') do |f|
+    f.puts final_message
+  end
+end
+
+# Parse config file for settings
+settings      = GroupParser.new(CONFIG_FILE)
+recipients    = settings.groups['mail_recipients']
+locations     = settings.groups['check_urls']
+url_responses = []
+
+# Scan each url and report status
+locations.each do |location|
+  if location =~ /^http(s)?:\/\/\w+\.\w+\.\w+(\.\w+)?$/
+    location << '/'
+  end
+  
+  begin
+    response = check_url(location)
+  rescue MalformedURI
+    msg =  "ERROR: '#{location}' is not a valid URI. Quitting"
+    log_message msg
+    exit
+  end
+  url_responses << write_url_status(location, response)
+end
+
+PulseMailer.deliver_error_notice(recipients, url_responses.join("\n"))
+log_message(url_responses)

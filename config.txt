@@ -1,0 +1,9 @@
+[mail_recipients]
+Nate Miller<nate@nate-millers-macbook-pro.local>
+Joe Weisser<joew@bizxchange.com>
+
+[check_urls]
+http://dev.newsheridan.com
+http://dev.sweetbeautyspa.com
+http://dev.maps.natemiller.org
+http://dev.drupaltest.com
