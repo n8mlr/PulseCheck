@@ -1,0 +1,19 @@
+PulseCheck
+============================
+
+PulseCheck is a simple program written to ping a list of urls and notify an administrator when
+something has gone wrong. PulseCheck simply examines a HTTP response from the URL and logs an
+error when the response is anything besides 200.
+
+Requirements
+- Ruby 1.8+
+- Actionmailer gem
+
+Usage 
+============================
+- Open config.txt and under mail_recipients, add each email address which will receive an alert 
+when a website is no longer returning a 200 response code
+
+- Under check_urls, add each url you would like to monitor
+
+That's it. If you want this script to run continuously, assign it to cron or daemon. 
