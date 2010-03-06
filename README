@@ -16,4 +16,7 @@ when a website is no longer returning a 200 response code
 
 - Under check_urls, add each url you would like to monitor
 
-That's it. If you want this script to run continuously, assign it to cron or daemon. 
+That's it. If you want this script to run continuously, assign it to cron or daemon.
+
+To execute, from prompt:
+$ ruby check
